@@ -23,12 +23,14 @@ namespace MyBhapticsTactsuit
         private static ManualResetEvent Teleportation_mrse = new ManualResetEvent(false);
         private static ManualResetEvent DrillingLeft_mrse = new ManualResetEvent(false);
         private static ManualResetEvent DrillingRight_mrse = new ManualResetEvent(false);
+        private static ManualResetEvent Heating_mrse = new ManualResetEvent(false);
 
         public int SwimmingDelay = 1000;
         public float SwimmingIntensity = 0.1f;
         public bool SwimmingEffectActive = false;
         public bool SwimmingEffectStarted = false;
         public bool seaGlideEquipped = false;
+        public float heatingIntensity = 1f;
 
         // dictionary of all feedback patterns found in the bHaptics directory
         public Dictionary<String, FileInfo> FeedbackMap = new Dictionary<String, FileInfo>();
@@ -57,6 +59,16 @@ namespace MyBhapticsTactsuit
                 LowOxygen_mrse.WaitOne();
                 PlaybackHaptics("lowOxygen");
                 Thread.Sleep(1000);
+            }
+        }
+        public void HeatingFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                Heating_mrse.WaitOne();
+                PlaybackHaptics("Heating", true, heatingIntensity);
+                Thread.Sleep(2000);
             }
         }
         public void LowFoodFunc()
@@ -156,6 +168,8 @@ namespace MyBhapticsTactsuit
             DrillingLeftThread.Start();
             Thread DrillingRightThread = new Thread(DrillingRightFunc);
             DrillingRightThread.Start();
+            Thread HeatingThread = new Thread(HeatingFunc);
+            HeatingThread.Start();
         }
 
         public void LOG(string logStr)
@@ -271,6 +285,16 @@ namespace MyBhapticsTactsuit
                 SwimmingEffectStarted = false;
             }
         }
+        public void StartHeating(float intensity = 1f)
+        {
+            heatingIntensity = intensity;
+            Heating_mrse.Set();
+        }
+
+        public void StopHeating()
+        {
+            Heating_mrse.Reset();
+        }
         public void StartTeleportation()
         {
             Teleportation_mrse.Set();
@@ -328,6 +352,8 @@ namespace MyBhapticsTactsuit
             StopTeleportation();
             StopDrilling("left");
             StopDrilling("right");
+            StopHeartBeat();
+            StopHeating();
         }
     }
 }

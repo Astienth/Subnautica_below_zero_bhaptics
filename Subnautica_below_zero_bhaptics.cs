@@ -121,7 +121,7 @@ namespace Subnautica_below_zero_bhaptics
             Plugin.tactsuitVr.StopTeleportation();
         }
     }
-
+    
     [HarmonyPatch(typeof(Player), "UpdateIsUnderwater")]
     public class bhaptics_OnEnterExitWater
     {
@@ -154,7 +154,7 @@ namespace Subnautica_below_zero_bhaptics
             isUnderwaterForSwimming = __instance.isUnderwaterForSwimming.value;
         }
     }
-
+    
     #endregion
 
     #region Equipments
@@ -303,6 +303,22 @@ namespace Subnautica_below_zero_bhaptics
             Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
         }
     }
+
+    [HarmonyPatch(typeof(RepulsionCannon), "ShootObject")]
+    public class bhaptics_OnRepulsionCannon
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Vest");
+            Plugin.tactsuitVr.PlaybackHaptics("Scanning_Arm_R");
+        }
+    }
+
     [HarmonyPatch(typeof(PropulsionCannon), "GrabObject")]
     public class bhaptics_OnPropulsionCannon
     {
@@ -351,6 +367,50 @@ namespace Subnautica_below_zero_bhaptics
     #endregion
 
     #region Vehicles
+    
+    [HarmonyPatch(typeof(Hoverbike), "SetBoostButtonState")]
+    public class bhaptics_OnSnowfoxSprint
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Hoverbike __instance, bool state)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__instance.isPiloting || state)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("LandAfterJump", true, 1f, 4f);
+        }
+    }
+
+    [HarmonyPatch(typeof(Hoverbike), "OnTakeDamage")]
+    public class bhaptics_OnSnowfoxDamage
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Hoverbike __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled || !__instance.isPiloting)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+        }
+    }
+
+    [HarmonyPatch(typeof(SeaTruckEffects), "ImpactRumbleDelayedAsync")]
+    public class bhaptics_OnSeatruckDamage
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Arms");
+            Plugin.tactsuitVr.PlaybackHaptics("VehicleImpact_Vest");
+        }
+    }
 
     [HarmonyPatch(typeof(CyclopsExternalDamageManager), "OnTakeDamage")]
     public class bhaptics_OnCyclopDamage
@@ -736,14 +796,60 @@ namespace Subnautica_below_zero_bhaptics
     public class bhaptics_OnLowHealthStop
     {
         [HarmonyPostfix]
-        public static void Postfix()
+        public static void Postfix(float damage)
         {
             if (Plugin.tactsuitVr.suitDisabled)
             {
                 return;
             }
             Plugin.tactsuitVr.StopHeartBeat();
-            Plugin.tactsuitVr.PlaybackHaptics("Heal");
+            if (damage > 1)
+            {
+                Plugin.tactsuitVr.PlaybackHaptics("Heal");
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(uGUI_BodyHeatMeter), "OnPulse")]
+    public class bhaptics_OnTemperaturePulse
+    {
+        [HarmonyPostfix]
+        public static void Postfix(uGUI_FoodBar __instance)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            float pulseDelay = Traverse.Create(__instance).Field("pulseDelay").GetValue<float>();
+            if (pulseDelay <= 2f)
+            {
+                Plugin.tactsuitVr.StartHeating(2f);
+            }
+            else
+            {
+                Plugin.tactsuitVr.StopHeating();
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ThermalLily), "IsPlayerClose")]
+    public class bhaptics_OnPlayerCloseToThermalLily
+    {
+        [HarmonyPostfix]
+        public static void Postfix(bool __result)
+        {
+            if (Plugin.tactsuitVr.suitDisabled)
+            {
+                return;
+            }
+            if (__result)
+            {
+                Plugin.tactsuitVr.StartHeating(0.5f);
+            }
+            else
+            {
+                Plugin.tactsuitVr.StopHeating();
+            }
         }
     }
 
