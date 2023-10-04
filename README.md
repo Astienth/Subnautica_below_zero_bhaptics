@@ -6,6 +6,8 @@
 
 This mod adds bhaptics (vest and arms) support to the game
 
+☕ If you wanna show some support you can buy me a coffee : https://www.buymeacoffee.com/astienth4
+
 # VR Mod installation
 
 - If you don't wanna play with the vr mod, go directly to **Bhaptics mod installation section below**.
