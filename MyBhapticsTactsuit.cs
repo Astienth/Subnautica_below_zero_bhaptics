@@ -32,6 +32,11 @@ namespace MyBhapticsTactsuit
         public bool seaGlideEquipped = false;
         public float heatingIntensity = 1f;
 
+        public int heartbeatCount = 0;
+        public int LowOxygen = 0;
+        public int LowFood = 0;
+        public int LowWater = 0;
+
         // dictionary of all feedback patterns found in the bHaptics directory
         public Dictionary<String, FileInfo> FeedbackMap = new Dictionary<String, FileInfo>();
 
@@ -41,26 +46,6 @@ namespace MyBhapticsTactsuit
 
         private static RotationOption defaultRotationOption = new RotationOption(0.0f, 0.0f);
 
-        public void HeartBeatFunc()
-        {
-            while (true)
-            {
-                // Check if reset event is active
-                HeartBeat_mrse.WaitOne();
-                PlaybackHaptics("HeartBeat");
-                Thread.Sleep(1000);
-            }
-        }
-        public void LowOxygenFunc()
-        {
-            while (true)
-            {
-                // Check if reset event is active
-                LowOxygen_mrse.WaitOne();
-                PlaybackHaptics("lowOxygen");
-                Thread.Sleep(1000);
-            }
-        }
         public void HeatingFunc()
         {
             while (true)
@@ -71,6 +56,36 @@ namespace MyBhapticsTactsuit
                 Thread.Sleep(2000);
             }
         }
+        public void HeartBeatFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                HeartBeat_mrse.WaitOne();
+                PlaybackHaptics("HeartBeat");
+                if (heartbeatCount > 25)
+                {
+                    StopHeartBeat();
+                }
+                heartbeatCount++;
+                Thread.Sleep(1000);
+            }
+        }
+        public void LowOxygenFunc()
+        {
+            while (true)
+            {
+                // Check if reset event is active
+                LowOxygen_mrse.WaitOne();
+                PlaybackHaptics("lowOxygen");
+                if (LowOxygen > 25)
+                {
+                    StopLowOxygen();
+                }
+                LowOxygen++;
+                Thread.Sleep(1000);
+            }
+        }
         public void LowFoodFunc()
         {
             while (true)
@@ -78,6 +93,11 @@ namespace MyBhapticsTactsuit
                 // Check if reset event is active
                 LowFood_mrse.WaitOne();
                 PlaybackHaptics("lowFood");
+                if (LowFood > 25)
+                {
+                    StopLowFood();
+                }
+                LowFood++;
                 Thread.Sleep(1000);
             }
         }
@@ -88,6 +108,11 @@ namespace MyBhapticsTactsuit
                 // Check if reset event is active
                 LowWater_mrse.WaitOne();
                 PlaybackHaptics("Eating", true, 0.5f);
+                if (LowWater > 25)
+                {
+                    StopLowWater();
+                }
+                LowWater++;
                 Thread.Sleep(1000);
             }
         }
@@ -237,6 +262,7 @@ namespace MyBhapticsTactsuit
         public void StopHeartBeat()
         {
             HeartBeat_mrse.Reset();
+            heartbeatCount = 0;
         }
 
         public void StartLowOxygen()
@@ -247,6 +273,7 @@ namespace MyBhapticsTactsuit
         public void StopLowOxygen()
         {
             LowOxygen_mrse.Reset();
+            LowOxygen = 0;
         }
 
         public void StartLowFood()
@@ -257,6 +284,7 @@ namespace MyBhapticsTactsuit
         public void StopLowFood()
         {
             LowFood_mrse.Reset();
+            LowFood = 0;
         }
 
         public void StartLowWater()
@@ -267,6 +295,7 @@ namespace MyBhapticsTactsuit
         public void StopLowWater()
         {
             LowWater_mrse.Reset();
+            LowWater = 0;
         }
         public void StartSwimming()
         {
